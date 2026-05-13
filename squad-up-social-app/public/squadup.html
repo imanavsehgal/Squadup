@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SquadUp - Find Your Squad</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Login/Signup Styles */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1D9E75 0%, #15785a 100%);
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .auth-card h1 {
+            font-size: 28px;
+            color: #1D9E75;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .auth-card p {
+            color: #666;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #1D9E75;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #333;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #1D9E75;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #178a66;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .error-message {
+            color: #e53935;
+            font-size: 14px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* App Layout */
+        .app-container {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Topbar */
+        .topbar {
+            background: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar h1 {
+            font-size: 24px;
+            color: #1D9E75;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #e53935;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 200;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .mark-read-btn {
+            background: none;
+            border: none;
+            color: #1D9E75;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .notification-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #f9f9f9;
+        }
+
+        .notification-item.unread {
+            background: #f0faf6;
+        }
+
+        .notification-item p {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .notification-item span {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .profile-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #1D9E75;
+        }
+
+        .nav-item span {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 80px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Post Card */
+        .post-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            border-left: 4px solid transparent;
+        }
+
+        .post-card.own-post {
+            border-left-color: #1D9E75;
+        }
+
+        .post-card.expired {
+            opacity: 0.5;
+            filter: grayscale(0.5);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            margin-right: 12px;
+        }
+
+        .post-author {
+            flex: 1;
+        }
+
+        .post-author h4 {
+            font-size: 15px;
+            color: #333;
+        }
+
+        .post-author span {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .category-tag {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #e8f5f0;
+            color: #1D9E75;
+        }
+
+        .post-body {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .post-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .post-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .join-btn {
+            background: #1D9E75;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .join-btn:hover {
+            background: #178a66;
+        }
+
+        .join-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Call Requests */
+        .calls-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        .calls-section h5 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .call-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .call-item .avatar {
+            width: 36px;
+            height: 36px;
+            font-size: 14px;
+        }
+
+        .call-info {
+            flex: 1;
+            margin-left: 12px;
+        }
+
+        .call-info h5 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .call-info p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .call-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .accept-btn, .decline-btn {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .accept-btn {
+            background: #1D9E75;
+            color: white;
+        }
+
+        .decline-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        /* New Post Form */
+        .composer-card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+
+        .composer-card h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .composer-card textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .ai-suggestions {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .ai-suggestions.show {
+            display: block;
+        }
+
+        .ai-suggestions h4 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .suggestion-item:hover {
+            border-color: #1D9E75;
+        }
+
+        .suggestion-item p {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .ai-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .ai-btn:hover {
+            opacity: 0.9;
+        }
+
+        .ai-loading {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .ai-loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #1D9E75;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Profile */
+        .profile-card {
+            background: white;
+            border-radius: 14px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 42px;
+            font-weight: 600;
+        }
+
+        .profile-card h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .profile-card .username {
+            color: #999;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .profile-card .bio {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            padding: 20px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 24px;
+            color: #1D9E75;
+        }
+
+        .stat-item p {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .edit-profile-form {
+            display: none;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .edit-profile-form.show {
+            display: block;
+        }
+
+        .logout-btn {
+            margin-top: 20px;
+            background: #f5f5f5;
+            color: #e53935;
+        }
+
+        /* Join Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 24px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .topbar h1 {
+                font-size: 20px;
+            }
+
+            .notification-dropdown {
+                width: calc(100vw - 40px);
+                right: -60px;
+            }
+
+            .stats-row {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Container -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-card">
+            <!-- Login Form -->
+            <div id="loginForm">
+                <h1>🎯 SquadUp</h1>
+                <p>Find your squad for any activity</p>
+                
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password">
+                </div>
+                <div id="loginError" class="error-message"></div>
+                <button class="btn btn-primary" onclick="handleLogin()">Log In</button>
+                <button class="btn btn-secondary" onclick="showSignup()">Create Account</button>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" style="display: none;">
+                <h1>🎯 Join SquadUp</h1>
+                <p>Create your account</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="signupFirstName" placeholder="First name">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="signupLastName" placeholder="Last name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="signupUsername" placeholder="Choose username">
+                </div>
+                <div class="form-group">
+                    <label>Password (min 6 characters)</label>
+                    <input type="password" id="signupPassword" placeholder="Create password">
+                </div>
+                <div class="form-group">
+                    <label>Bio (optional)</label>
+                    <textarea id="signupBio" placeholder="Tell us about yourself..." rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Avatar Color</label>
+                    <div class="color-picker" id="colorPicker"></div>
+                </div>
+                <div id="signupError" class="error-message"></div>
+                <button class="btn btn-primary" onclick="handleSignup()">Create Account</button>
+                <button class="btn btn-secondary" onclick="showLogin()">Back to Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-container" id="appContainer">
+        <!-- Topbar -->
+        <div class="topbar">
+            <h1>🎯 SquadUp</h1>
+            <div class="topbar-right">
+                <div style="position: relative;">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        🔔
+                        <span class="notification-badge" id="notifBadge" style="display: none;">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="notifDropdown">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-read-btn" onclick="markAllRead()">Mark all read</button>
+                        </div>
+                        <div id="notifList"></div>
+                    </div>
+                </div>
+                <button class="profile-btn" id="topbarAvatar" onclick="switchView('profile')"></button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Feed View -->
+            <div class="view active" id="feedView">
+                <div id="feedPosts"></div>
+            </div>
+
+            <!-- My Posts View -->
+            <div class="view" id="myPostsView">
+                <h2 style="margin-bottom: 20px; color: #333;">My Plans</h2>
+                <div id="myPosts"></div>
+            </div>
+
+            <!-- New Post View -->
+            <div class="view" id="newPostView">
+                <div class="composer-card">
+                    <h2>📝 Create New Plan</h2>
+                    <div class="form-group">
+                        <label>What's the plan?</label>
+                        <textarea id="postBody" placeholder="Describe your activity..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="postCategory">
+                                <option value="sports">⚽ Sports</option>
+                                <option value="food">🍕 Food</option>
+                                <option value="study">📚 Study</option>
+                                <option value="music">🎵 Music</option>
+                                <option value="movies">🎬 Movies</option>
+                                <option value="travel">✈️ Travel</option>
+                                <option value="gaming">🎮 Gaming</option>
+                                <option value="fitness">💪 Fitness</option>
+                                <option value="chill">😎 Chill</option>
+                                <option value="other">✨ Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Open Slots</label>
+                            <input type="number" id="postSlots" min="1" max="20" value="2">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button class="btn btn-small ai-btn" onclick="getAISuggestions()">✨ AI Ideas</button>
+                        <div class="ai-loading" id="aiLoading">
+                            <div class="spinner"></div>
+                            <span>Getting suggestions...</span>
+                        </div>
+                    </div>
+                    <div class="ai-suggestions" id="aiSuggestions">
+                        <h4>💡 AI Suggestions (click to use)</h4>
+                        <div id="suggestionsList"></div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="createPost()">Post Plan</button>
+                </div>
+            </div>
+
+            <!-- Profile View -->
+            <div class="view" id="profileView">
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileAvatar"></div>
+                    <h2 id="profileName"></h2>
+                    <p class="username" id="profileUsername"></p>
+                    <p class="bio" id="profileBio"></p>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <h3 id="statPosts">0</h3>
+                            <p>Plans Posted</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3 id="statJoined">0</h3>
+                            <p>Plans Joined</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3 id="statAccepted">0</h3>
+                            <p>Calls Accepted</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="toggleEditProfile()">Edit Profile</button>
+                    
+                    <div class="edit-profile-form" id="editProfileForm">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" id="editFirstName">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" id="editLastName">
+                        </div>
+                        <div class="form-group">
+                            <label>Bio</label>
+                            <textarea id="editBio" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Avatar Color</label>
+                            <div class="color-picker" id="editColorPicker"></div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+                    </div>
+                    
+                    <button class="btn logout-btn" onclick="handleLogout()">Log Out</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-item active" data-view="feed" onclick="switchView('feed')">
+                <span>🏠</span>
+                Feed
+            </button>
+            <button class="nav-item" data-view="myPosts" onclick="switchView('myPosts')">
+                <span>📋</span>
+                My Plans
+            </button>
+            <button class="nav-item" data-view="newPost" onclick="switchView('newPost')">
+                <span>➕</span>
+                New Plan
+            </button>
+            <button class="nav-item" data-view="profile" onclick="switchView('profile')">
+                <span>👤</span>
+                Profile
+            </button>
+        </div>
+    </div>
+
+    <!-- Join Modal -->
+    <div class="modal-overlay" id="joinModal">
+        <div class="modal">
+            <h3>🙋 Request to Join</h3>
+            <div class="form-group">
+                <label>Add a note (optional)</label>
+                <textarea id="joinNote" placeholder="Introduce yourself or add details..." rows="3"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeJoinModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitJoinRequest()">Send Request</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Avatar colors
+        var AVATAR_COLORS = [
+            '#e53935', '#d81b60', '#8e24aa', '#5e35b1',
+            '#3949ab', '#1e88e5', '#039be5', '#00acc1',
+            '#00897b', '#43a047', '#7cb342', '#c0ca33'
+        ];
+
+        // Category icons
+        var CATEGORY_ICONS = {
+            sports: '⚽',
+            food: '🍕',
+            study: '📚',
+            music: '🎵',
+            movies: '🎬',
+            travel: '✈️',
+            gaming: '🎮',
+            fitness: '💪',
+            chill: '😎',
+            other: '✨'
+        };
+
+        // State
+        var users = {};
+        var posts = [];
+        var notifications = [];
+        var currentUser = null;
+        var selectedColor = AVATAR_COLORS[0];
+        var editSelectedColor = null;
+        var joiningPostId = null;
+
+        // Initialize demo user
+        users['demo'] = {
+            username: 'demo',
+            password: 'demo123',
+            firstName: 'Demo',
+            lastName: 'User',
+            bio: 'Just exploring SquadUp! Looking for fun activities.',
+            avatarColor: '#1e88e5',
+            postsCount: 0,
+            joinedCount: 0,
+            acceptedCount: 0
+        };
+
+        // Fake users for sample posts
+        var fakeUsers = [
+            { username: 'alex_fit', firstName: 'Alex', lastName: 'Kumar', avatarColor: '#e53935', bio: 'Fitness enthusiast' },
+            { username: 'priya_music', firstName: 'Priya', lastName: 'Sharma', avatarColor: '#8e24aa', bio: 'Music lover' },
+            { username: 'rahul_games', firstName: 'Rahul', lastName: 'Gupta', avatarColor: '#3949ab', bio: 'Gamer' },
+            { username: 'sneha_foodie', firstName: 'Sneha', lastName: 'Patel', avatarColor: '#00897b', bio: 'Foodie' },
+            { username: 'amit_travel', firstName: 'Amit', lastName: 'Singh', avatarColor: '#039be5', bio: 'Traveler' },
+            { username: 'neha_study', firstName: 'Neha', lastName: 'Verma', avatarColor: '#d81b60', bio: 'Student' }
+        ];
+
+        // Initialize color picker
+        function initColorPicker(containerId, onSelect) {
+            var container = document.getElementById(containerId);
+            container.innerHTML = '';
+            AVATAR_COLORS.forEach(function(color) {
+                var div = document.createElement('div');
+                div.className = 'color-option' + (color === selectedColor ? ' selected' : '');
+                div.style.backgroundColor = color;
+                div.onclick = function() {
+                    container.querySelectorAll('.color-option').forEach(function(el) {
+                        el.classList.remove('selected');
+                    });
+                    div.classList.add('selected');
+                    if (onSelect) onSelect(color);
+                };
+                container.appendChild(div);
+            });
+        }
+
+        // Initialize
+        initColorPicker('colorPicker', function(color) { selectedColor = color; });
+
+        // Auth functions
+        function showSignup() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('loginError').textContent = '';
+        }
+
+        function showLogin() {
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupError').textContent = '';
+        }
+
+        function handleLogin() {
+            var username = document.getElementById('loginUsername').value.trim();
+            var password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                document.getElementById('loginError').textContent = 'Please fill in all fields';
+                return;
+            }
+
+            var user = users[username];
+            if (!user || user.password !== password) {
+                document.getElementById('loginError').textContent = 'Invalid username or password';
+                return;
+            }
+
+            currentUser = user;
+            onLoginSuccess();
+        }
+
+        function handleSignup() {
+            var firstName = document.getElementById('signupFirstName').value.trim();
+            var lastName = document.getElementById('signupLastName').value.trim();
+            var username = document.getElementById('signupUsername').value.trim();
+            var password = document.getElementById('signupPassword').value;
+            var bio = document.getElementById('signupBio').value.trim();
+
+            if (!firstName || !lastName || !username || !password) {
+                document.getElementById('signupError').textContent = 'Please fill in all required fields';
+                return;
+            }
+
+            if (password.length < 6) {
+                document.getElementById('signupError').textContent = 'Password must be at least 6 characters';
+                return;
+            }
+
+            if (users[username]) {
+                document.getElementById('signupError').textContent = 'Username already taken';
+                return;
+            }
+
+            users[username] = {
+                username: username,
+                password: password,
+                firstName: firstName,
+                lastName: lastName,
+                bio: bio,
+                avatarColor: selectedColor,
+                postsCount: 0,
+                joinedCount: 0,
+                acceptedCount: 0
+            };
+
+            currentUser = users[username];
+            onLoginSuccess();
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            posts = [];
+            notifications = [];
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'flex';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function onLoginSuccess() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'flex';
+            
+            // Seed sample posts
+            seedPosts();
+            
+            // Update UI
+            updateTopbarAvatar();
+            renderFeed();
+            renderProfile();
+            updateNotificationBadge();
+
+            // Simulate incoming call after 5 seconds
+            setTimeout(function() {
+                if (currentUser && posts.length > 0) {
+                    var userPost = posts.find(function(p) { return p.author.username === currentUser.username; });
+                    if (userPost) {
+                        var caller = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+                        userPost.calls.push({
+                            id: Date.now(),
+                            user: caller,
+                            note: 'Hey! Would love to join you!',
+                            status: 'pending'
+                        });
+                        addNotification('📥 ' + caller.firstName + ' wants to join your plan!', userPost.id);
+                    }
+                }
+            }, 5000);
+
+            // Update timers every minute
+            setInterval(updateTimers, 60000);
+        }
+
+        function seedPosts() {
+            var now = Date.now();
+            var samplePosts = [
+                { body: 'Going for a morning run at Leisure Valley Park in Gurugram at 6:30 AM tomorrow. Need 2 running buddies! 🏃‍♂️', category: 'fitness', slots: 2, author: fakeUsers[0], createdAt: now - 3600000 },
+                { body: 'Anyone up for trying the new South Indian place at Cyber Hub tonight? Looking for 3 more foodies! 🍛', category: 'food', slots: 3, author: fakeUsers[3], createdAt: now - 7200000 },
+                { body: 'Planning a weekend trip to Kasauli from Ludhiana. Need 4 travel companions. Leaving Saturday morning! 🚗', category: 'travel', slots: 4, author: fakeUsers[4], createdAt: now - 10800000 },
+                { body: 'Study group for CAT prep at British Library, Sector 17, Chandigarh. Looking for 2 serious aspirants! 📖', category: 'study', slots: 2, author: fakeUsers[5], createdAt: now - 14400000 },
+                { body: 'Valorant squad needed! Playing ranked tonight from 9 PM. Need 3 more players. Discord: rahul#1234 🎮', category: 'gaming', slots: 3, author: fakeUsers[2], createdAt: now - 18000000 },
+                { body: 'Open mic night at The Piano Man Jazz Club in Gurugram! Looking for 2 people to jam with 🎸', category: 'music', slots: 2, author: fakeUsers[1], createdAt: now - 21600000 },
+                { body: 'Movie night at Ambience Mall - watching the new Marvel movie at 8 PM. 3 tickets left! 🎬', category: 'movies', slots: 3, author: fakeUsers[0], createdAt: now - 86400000 - 3600000 }, // Expired
+                { body: 'Just chilling at Galleria Market rooftop cafe. Anyone free to hang out? ☕', category: 'chill', slots: 2, author: fakeUsers[1], createdAt: now - 1800000 }
+            ];
+
+            // Add a post from current user
+            samplePosts.push({
+                body: 'Looking for partners for evening badminton at DLF Club, Gurugram. 3 slots available! 🏸',
+                category: 'sports',
+                slots: 3,
+                author: currentUser,
+                createdAt: now - 5400000
+            });
+            currentUser.postsCount = 1;
+
+            posts = samplePosts.map(function(p, index) {
+                return {
+                    id: index + 1,
+                    body: p.body,
+                    category: p.category,
+                    slots: p.slots,
+                    remainingSlots: p.slots,
+                    author: p.author,
+                    createdAt: p.createdAt,
+                    calls: []
+                };
+            });
+        }
+
+        // View switching
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(function(v) {
+                v.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(function(n) {
+                n.classList.remove('active');
+            });
+
+            document.getElementById(viewName + 'View').classList.add('active');
+            var navBtn = document.querySelector('.nav-item[data-view="' + viewName + '"]');
+            if (navBtn) navBtn.classList.add('active');
+
+            if (viewName === 'feed') renderFeed();
+            if (viewName === 'myPosts') renderMyPosts();
+            if (viewName === 'profile') renderProfile();
+        }
+
+        function updateTopbarAvatar() {
+            var btn = document.getElementById('topbarAvatar');
+            btn.style.backgroundColor = currentUser.avatarColor;
+            btn.textContent = currentUser.firstName.charAt(0);
+        }
+
+        // Render functions
+        function renderFeed() {
+            var container = document.getElementById('feedPosts');
+            var sortedPosts = posts.slice().sort(function(a, b) {
+                return b.createdAt - a.createdAt;
+            });
+
+            if (sortedPosts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>No plans yet. Be the first to create one!</p></div>';
+                return;
+            }
+
+            container.innerHTML = sortedPosts.map(function(post) {
+                return renderPostCard(post, false);
+            }).join('');
+        }
+
+        function renderMyPosts() {
+            var container = document.getElementById('myPosts');
+            var myPosts = posts.filter(function(p) {
+                return p.author.username === currentUser.username;
+            }).sort(function(a, b) {
+                return b.createdAt - a.createdAt;
+            });
+
+            if (myPosts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📝</span><p>You haven\'t created any plans yet.</p></div>';
+                return;
+            }
+
+            container.innerHTML = myPosts.map(function(post) {
+                return renderPostCard(post, true);
+            }).join('');
+        }
+
+        function renderPostCard(post, showCalls) {
+            var isExpired = isPostExpired(post);
+            var isOwn = post.author.username === currentUser.username;
+            var timeLeft = getTimeLeft(post);
+            var hasJoined = post.calls.some(function(c) { 
+                return c.user.username === currentUser.username && c.status === 'accepted'; 
+            });
+            var hasPending = post.calls.some(function(c) { 
+                return c.user.username === currentUser.username && c.status === 'pending'; 
+            });
+
+            var callsHtml = '';
+            if (showCalls && post.calls.length > 0) {
+                var pendingCalls = post.calls.filter(function(c) { return c.status === 'pending'; });
+                if (pendingCalls.length > 0) {
+                    callsHtml = '<div class="calls-section"><h5>📥 Incoming Requests (' + pendingCalls.length + ')</h5>' +
+                        pendingCalls.map(function(call) {
+                            return '<div class="call-item">' +
+                                '<div class="avatar" style="background-color: ' + call.user.avatarColor + '">' + call.user.firstName.charAt(0) + '</div>' +
+                                '<div class="call-info"><h5>' + call.user.firstName + ' ' + call.user.lastName + '</h5>' +
+                                (call.note ? '<p>"' + call.note + '"</p>' : '<p>No note</p>') + '</div>' +
+                                '<div class="call-actions">' +
+                                '<button class="accept-btn" onclick="acceptCall(' + post.id + ', ' + call.id + ')">Accept</button>' +
+                                '<button class="decline-btn" onclick="declineCall(' + post.id + ', ' + call.id + ')">Decline</button>' +
+                                '</div></div>';
+                        }).join('') + '</div>';
+                }
+            }
+
+            var joinBtnHtml = '';
+            if (!isOwn && !isExpired) {
+                if (hasJoined) {
+                    joinBtnHtml = '<button class="join-btn" disabled>✓ Joined</button>';
+                } else if (hasPending) {
+                    joinBtnHtml = '<button class="join-btn" disabled>⏳ Pending</button>';
+                } else if (post.remainingSlots > 0) {
+                    joinBtnHtml = '<button class="join-btn" onclick="openJoinModal(' + post.id + ')">Join</button>';
+                } else {
+                    joinBtnHtml = '<button class="join-btn" disabled>Full</button>';
+                }
+            }
+
+            return '<div class="post-card' + (isOwn ? ' own-post' : '') + (isExpired ? ' expired' : '') + '" id="post-' + post.id + '">' +
+                '<div class="post-header">' +
+                '<div class="avatar" style="background-color: ' + post.author.avatarColor + '">' + post.author.firstName.charAt(0) + '</div>' +
+                '<div class="post-author"><h4>' + post.author.firstName + ' ' + post.author.lastName + '</h4>' +
+                '<span>@' + post.author.username + '</span></div>' +
+                '<span class="category-tag">' + CATEGORY_ICONS[post.category] + ' ' + post.category + '</span></div>' +
+                '<p class="post-body">' + post.body + '</p>' +
+                '<div class="post-footer"><div class="post-meta">' +
+                '<span>⏱️ ' + timeLeft + '</span>' +
+                '<span>👥 ' + post.remainingSlots + '/' + post.slots + ' slots</span></div>' +
+                joinBtnHtml + '</div>' + callsHtml + '</div>';
+        }
+
+        function renderProfile() {
+            document.getElementById('profileAvatar').style.backgroundColor = currentUser.avatarColor;
+            document.getElementById('profileAvatar').textContent = currentUser.firstName.charAt(0);
+            document.getElementById('profileName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+            document.getElementById('profileUsername').textContent = '@' + currentUser.username;
+            document.getElementById('profileBio').textContent = currentUser.bio || 'No bio yet';
+            document.getElementById('statPosts').textContent = currentUser.postsCount;
+            document.getElementById('statJoined').textContent = currentUser.joinedCount;
+            document.getElementById('statAccepted').textContent = currentUser.acceptedCount;
+
+            // Edit form
+            document.getElementById('editFirstName').value = currentUser.firstName;
+            document.getElementById('editLastName').value = currentUser.lastName;
+            document.getElementById('editBio').value = currentUser.bio || '';
+            editSelectedColor = currentUser.avatarColor;
+            initColorPicker('editColorPicker', function(color) { editSelectedColor = color; });
+            
+            // Select current color
+            var editPicker = document.getElementById('editColorPicker');
+            editPicker.querySelectorAll('.color-option').forEach(function(el) {
+                el.classList.remove('selected');
+                if (el.style.backgroundColor === currentUser.avatarColor || 
+                    rgbToHex(el.style.backgroundColor) === currentUser.avatarColor) {
+                    el.classList.add('selected');
+                }
+            });
+        }
+
+        function rgbToHex(rgb) {
+            if (rgb.startsWith('#')) return rgb;
+            var result = rgb.match(/\d+/g);
+            if (!result) return rgb;
+            return '#' + result.slice(0, 3).map(function(x) {
+                return parseInt(x).toString(16).padStart(2, '0');
+            }).join('');
+        }
+
+        // Time functions
+        function isPostExpired(post) {
+            return Date.now() - post.createdAt > 24 * 60 * 60 * 1000;
+        }
+
+        function getTimeLeft(post) {
+            var elapsed = Date.now() - post.createdAt;
+            var remaining = 24 * 60 * 60 * 1000 - elapsed;
+            
+            if (remaining <= 0) return 'Expired';
+            
+            var hours = Math.floor(remaining / (60 * 60 * 1000));
+            var minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+            
+            if (hours > 0) return hours + 'h ' + minutes + 'm left';
+            return minutes + 'm left';
+        }
+
+        function updateTimers() {
+            renderFeed();
+            renderMyPosts();
+        }
+
+        // Post creation
+        function createPost() {
+            var body = document.getElementById('postBody').value.trim();
+            var category = document.getElementById('postCategory').value;
+            var slots = parseInt(document.getElementById('postSlots').value) || 2;
+
+            if (!body) {
+                alert('Please describe your plan');
+                return;
+            }
+
+            var newPost = {
+                id: Date.now(),
+                body: body,
+                category: category,
+                slots: slots,
+                remainingSlots: slots,
+                author: currentUser,
+                createdAt: Date.now(),
+                calls: []
+            };
+
+            posts.unshift(newPost);
+            currentUser.postsCount++;
+
+            // Reset form
+            document.getElementById('postBody').value = '';
+            document.getElementById('postSlots').value = '2';
+            document.getElementById('aiSuggestions').classList.remove('show');
+
+            addNotification('✅ Your plan was posted!', newPost.id);
+            switchView('feed');
+        }
+
+        // Join functionality
+        function openJoinModal(postId) {
+            joiningPostId = postId;
+            document.getElementById('joinNote').value = '';
+            document.getElementById('joinModal').classList.add('show');
+        }
+
+        function closeJoinModal() {
+            joiningPostId = null;
+            document.getElementById('joinModal').classList.remove('show');
+        }
+
+        function submitJoinRequest() {
+            if (!joiningPostId) return;
+
+            var post = posts.find(function(p) { return p.id === joiningPostId; });
+            if (!post) return;
+
+            var note = document.getElementById('joinNote').value.trim();
+            
+            post.calls.push({
+                id: Date.now(),
+                user: currentUser,
+                note: note,
+                status: 'pending'
+            });
+
+            currentUser.joinedCount++;
+            
+            // Notify post owner (simulate)
+            addNotification('📥 ' + currentUser.firstName + ' wants to join: ' + post.body.substring(0, 30) + '...', post.id, post.author.username);
+
+            closeJoinModal();
+            renderFeed();
+        }
+
+        function acceptCall(postId, callId) {
+            var post = posts.find(function(p) { return p.id === postId; });
+            if (!post || post.remainingSlots <= 0) return;
+
+            var call = post.calls.find(function(c) { return c.id === callId; });
+            if (!call) return;
+
+            call.status = 'accepted';
+            post.remainingSlots--;
+            currentUser.acceptedCount++;
+
+            addNotification('🎉 Your request to join was accepted!', postId, call.user.username);
+            renderMyPosts();
+            renderFeed();
+        }
+
+        function declineCall(postId, callId) {
+            var post = posts.find(function(p) { return p.id === postId; });
+            if (!post) return;
+
+            var call = post.calls.find(function(c) { return c.id === callId; });
+            if (!call) return;
+
+            call.status = 'declined';
+            renderMyPosts();
+        }
+
+        // Notifications
+        function addNotification(message, postId, forUser) {
+            if (forUser && forUser !== currentUser.username) return;
+            
+            notifications.unshift({
+                id: Date.now(),
+                message: message,
+                postId: postId,
+                read: false,
+                createdAt: Date.now()
+            });
+
+            updateNotificationBadge();
+            renderNotifications();
+        }
+
+        function updateNotificationBadge() {
+            var unread = notifications.filter(function(n) { return !n.read; }).length;
+            var badge = document.getElementById('notifBadge');
+            
+            if (unread > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unread > 9 ? '9+' : unread;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function toggleNotifications() {
+            var dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('show');
+            if (dropdown.classList.contains('show')) {
+                renderNotifications();
+            }
+        }
+
+        function renderNotifications() {
+            var container = document.getElementById('notifList');
+            
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 30px;"><span>🔔</span><p>No notifications yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = notifications.slice(0, 20).map(function(n) {
+                var timeAgo = getTimeAgo(n.createdAt);
+                return '<div class="notification-item' + (n.read ? '' : ' unread') + '" onclick="goToPost(' + n.postId + ', ' + n.id + ')">' +
+                    '<p>' + n.message + '</p>' +
+                    '<span>' + timeAgo + '</span></div>';
+            }).join('');
+        }
+
+        function getTimeAgo(timestamp) {
+            var seconds = Math.floor((Date.now() - timestamp) / 1000);
+            if (seconds < 60) return 'Just now';
+            var minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + 'm ago';
+            var hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            return Math.floor(hours / 24) + 'd ago';
+        }
+
+        function goToPost(postId, notifId) {
+            var notif = notifications.find(function(n) { return n.id === notifId; });
+            if (notif) notif.read = true;
+            
+            updateNotificationBadge();
+            document.getElementById('notifDropdown').classList.remove('show');
+            
+            var post = posts.find(function(p) { return p.id === postId; });
+            if (post && post.author.username === currentUser.username) {
+                switchView('myPosts');
+            } else {
+                switchView('feed');
+            }
+            
+            setTimeout(function() {
+                var el = document.getElementById('post-' + postId);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.style.boxShadow = '0 0 0 3px #1D9E75';
+                    setTimeout(function() {
+                        el.style.boxShadow = '';
+                    }, 2000);
+                }
+            }, 100);
+        }
+
+        function markAllRead() {
+            notifications.forEach(function(n) { n.read = true; });
+            updateNotificationBadge();
+            renderNotifications();
+        }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            var dropdown = document.getElementById('notifDropdown');
+            var btn = document.querySelector('.notification-btn');
+            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Profile editing
+        function toggleEditProfile() {
+            var form = document.getElementById('editProfileForm');
+            form.classList.toggle('show');
+        }
+
+        function saveProfile() {
+            var firstName = document.getElementById('editFirstName').value.trim();
+            var lastName = document.getElementById('editLastName').value.trim();
+            var bio = document.getElementById('editBio').value.trim();
+
+            if (!firstName || !lastName) {
+                alert('First name and last name are required');
+                return;
+            }
+
+            currentUser.firstName = firstName;
+            currentUser.lastName = lastName;
+            currentUser.bio = bio;
+            if (editSelectedColor) currentUser.avatarColor = editSelectedColor;
+
+            // Update in users object
+            users[currentUser.username] = currentUser;
+
+            document.getElementById('editProfileForm').classList.remove('show');
+            renderProfile();
+            updateTopbarAvatar();
+            addNotification('✅ Profile updated!', null);
+        }
+
+        // AI Suggestions
+        function getAISuggestions() {
+            var category = document.getElementById('postCategory').value;
+            var loadingEl = document.getElementById('aiLoading');
+            var suggestionsEl = document.getElementById('aiSuggestions');
+            var listEl = document.getElementById('suggestionsList');
+
+            loadingEl.classList.add('show');
+            suggestionsEl.classList.remove('show');
+
+            // Simulated AI suggestions based on category and location
+            var suggestions = generateSuggestions(category);
+
+            setTimeout(function() {
+                loadingEl.classList.remove('show');
+                
+                listEl.innerHTML = suggestions.map(function(s) {
+                    return '<div class="suggestion-item" onclick="useSuggestion(this)">' +
+                        '<p>' + s + '</p></div>';
+                }).join('');
+                
+                suggestionsEl.classList.add('show');
+            }, 1500);
+        }
+
+        function generateSuggestions(category) {
+            var suggestions = {
+                sports: [
+                    'Looking for cricket partners at Tau Devi Lal Stadium in Gurugram this evening. Need 5 players for a friendly match! 🏏',
+                    'Anyone up for a tennis session at DLF Golf and Country Club? Beginner-friendly! 🎾',
+                    'Planning a football match at Leisure Valley Park, Gurugram at 5 PM. Need 6 more players! ⚽'
+                ],
+                food: [
+                    'Let\'s try the famous Amritsari Kulcha at Kake Di Hatti in Ludhiana! Looking for fellow foodies 🥟',
+                    'Exploring the new Italian place at Cyber Hub, Gurugram tonight. Anyone want to join? 🍝',
+                    'Street food trail at Sector 29, Gurugram - momos, chaat, and more! Who\'s hungry? 🌮'
+                ],
+                study: [
+                    'UPSC study group at Punjab Agricultural University Library, Ludhiana. Looking for serious aspirants! 📚',
+                    'Coding bootcamp prep at 91springboard, Gurugram. Let\'s crack DSA together! 💻',
+                    'MBA entrance prep at British Council Library. Need 3 study partners! 📖'
+                ],
+                music: [
+                    'Jam session at The Piano Man, Gurugram. Bringing my guitar - looking for vocalists! 🎸',
+                    'Bollywood karaoke night at Vapour Bar, Gurugram. Let\'s sing our hearts out! 🎤',
+                    'Classical music enthusiasts - attending Sufi night at Punjab Naatshala, Ludhiana! 🎵'
+                ],
+                movies: [
+                    'Catching the late-night show at Elante Mall, Chandigarh. Who\'s in? 🎬',
+                    'Marvel movie marathon at my place in DLF Phase 3. Popcorn provided! 🍿',
+                    'Art film screening at Tagore Theatre, Chandigarh. Looking for cinephiles! 🎭'
+                ],
+                travel: [
+                    'Weekend road trip to Kasauli from Ludhiana! Scenic drives and good vibes 🚗',
+                    'Trekking to Naina Devi Temple - leaving from Gurugram Saturday morning! ⛰️',
+                    'Exploring the Golden Temple in Amritsar this Sunday. Need travel buddies! 🛕'
+                ],
+                gaming: [
+                    'LAN party at my place in Sector 56, Gurugram. Valorant tournament! 🎮',
+                    'Board game night at Cafe Wanderlust, Ludhiana. Catan and more! 🎲',
+                    'FIFA tournament at gaming cafe in Cyber City. Cash prizes! 🏆'
+                ],
+                fitness: [
+                    'Morning yoga at Central Park, Gurugram at 6 AM. All levels welcome! 🧘',
+                    'CrossFit session at Cult Fit, Sector 29. Looking for workout partners! 💪',
+                    'Cycling group ride from Ludhiana to Khanna and back. 40km route! 🚴'
+                ],
+                chill: [
+                    'Rooftop chai and sunset at SkyLoft, Gurugram. Let\'s unwind! ☕',
+                    'Book club meetup at The Reader\'s Cafe, Ludhiana. Currently reading Sapiens! 📚',
+                    'Stargazing at Damdama Lake, Gurugram. Bringing telescope! ⭐'
+                ],
+                other: [
+                    'Photography walk at Lodhi Gardens, Delhi. Capture the autumn colors! 📸',
+                    'Volunteering at animal shelter in Gurugram this weekend. Help needed! 🐕',
+                    'Art workshop at Punjab Kala Bhawan, Ludhiana. Learn watercolors! 🎨'
+                ]
+            };
+
+            return suggestions[category] || suggestions.other;
+        }
+
+        function useSuggestion(element) {
+            document.getElementById('postBody').value = element.querySelector('p').textContent;
+            document.getElementById('aiSuggestions').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
