@@ -155,14 +155,21 @@ export default function SquadUp() {
   const [selectedColor, setSelectedColor] = useState(AVATAR_COLORS[0])
 
   // App state
+
   const [currentView, setCurrentView] = useState<"feed" | "myPosts" | "newPost" | "profile">("feed")
   const [posts, setPosts] = useState<Post[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("all")
   const [showNotifications, setShowNotifications] = useState(false)
 
   // New post form
+  const [postTitle, setPostTitle] = useState("")
   const [postBody, setPostBody] = useState("")
   const [postCategory, setPostCategory] = useState("sports")
+  const [postLocation, setPostLocation] = useState("")
+  const [postDate, setPostDate] = useState("")
+  const [postTime, setPostTime] = useState("")
   const [postSlots, setPostSlots] = useState(2)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([])
@@ -292,25 +299,47 @@ export default function SquadUp() {
 
   // Create post
   const createPost = () => {
-    if (!postBody.trim() || !currentUser) return
-    const newPost: Post = {
-      id: Date.now(),
-      body: postBody,
-      category: postCategory,
-      slots: postSlots,
-      remainingSlots: postSlots,
-      author: { username: currentUser.username, firstName: currentUser.firstName, lastName: currentUser.lastName, avatarColor: currentUser.avatarColor, bio: currentUser.bio },
-      createdAt: Date.now(),
-      calls: []
-    }
-    setPosts(prev => [newPost, ...prev])
-    setCurrentUser(prev => prev ? { ...prev, postsCount: prev.postsCount + 1 } : null)
-    setPostBody("")
-    setPostSlots(2)
-    setAiSuggestions([])
-    addNotification("Your plan was posted!", newPost.id)
-    setCurrentView("feed")
+  if (!postTitle.trim() || !postBody.trim() || !postLocation.trim() || !postDate || !postTime || !currentUser) return
+
+  const fullBody = `${postTitle.trim()}
+
+${postBody.trim()}
+
+📍 ${postLocation.trim()}
+🗓️ ${postDate}
+⏰ ${postTime}`
+
+  const newPost: Post = {
+    id: Date.now(),
+    body: fullBody,
+    category: postCategory,
+    slots: postSlots,
+    remainingSlots: postSlots,
+    author: {
+      username: currentUser.username,
+      firstName: currentUser.firstName,
+      lastName: currentUser.lastName,
+      avatarColor: currentUser.avatarColor,
+      bio: currentUser.bio
+    },
+    createdAt: Date.now(),
+    calls: []
   }
+
+  setPosts(prev => [newPost, ...prev])
+  setCurrentUser(prev => prev ? { ...prev, postsCount: prev.postsCount + 1 } : null)
+
+  setPostTitle("")
+  setPostBody("")
+  setPostLocation("")
+  setPostDate("")
+  setPostTime("")
+  setPostSlots(2)
+  setAiSuggestions([])
+
+  addNotification("Your plan was posted!", newPost.id)
+  setCurrentView("feed")
+}
 
   // Join request
   const openJoinModal = (postId: number) => {
@@ -714,87 +743,171 @@ export default function SquadUp() {
           </div>
         )}
 
-        {/* New Post View */}
-        {currentView === "newPost" && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 mb-5">Create New Plan</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">What&apos;s the plan?</label>
-                <textarea
-                  value={postBody}
-                  onChange={e => setPostBody(e.target.value)}
-                  placeholder="Describe your activity..."
-                  rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none resize-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <select
-                    value={postCategory}
-                    onChange={e => setPostCategory(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
-                  >
-                    {Object.entries(CATEGORY_ICONS).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Open Slots</label>
-                  <input
-                    type="number"
-                    value={postSlots}
-                    onChange={e => setPostSlots(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-                    min={1}
-                    max={20}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 flex-wrap">
-                <button
-                  onClick={getAISuggestions}
-                  disabled={aiLoading}
-                  className="px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  AI Ideas
-                </button>
-                {aiLoading && (
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <div className="w-5 h-5 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin" />
-                    <span>Getting suggestions...</span>
-                  </div>
-                )}
-              </div>
-              {aiSuggestions.length > 0 && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h4 className="text-sm font-medium text-gray-600 mb-3">AI Suggestions (click to use)</h4>
-                  <div className="space-y-2">
-                    {aiSuggestions.map((suggestion, i) => (
-                      <button
-                        key={i}
-                        onClick={() => { setPostBody(suggestion); setAiSuggestions([]) }}
-                        className="w-full p-3 bg-white rounded-lg text-left text-sm text-gray-700 hover:ring-2 hover:ring-emerald-600 transition-shadow"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <button
-                onClick={createPost}
-                disabled={!postBody.trim()}
-                className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                Post Plan
-              </button>
-            </div>
+       {/* New Post View */}
+{currentView === "newPost" && (
+  <div className="bg-white rounded-2xl p-6 shadow-sm">
+    <div className="mb-6">
+      <h2 className="text-2xl font-bold text-gray-900">Create New Plan</h2>
+      <p className="text-sm text-gray-500 mt-1">
+        Add clear details so the right people can join your plan.
+      </p>
+    </div>
+
+    <div className="space-y-5">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Plan Title
+        </label>
+        <input
+          type="text"
+          value={postTitle}
+          onChange={(e) => setPostTitle(e.target.value)}
+          placeholder="Example: Evening badminton session"
+          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Description
+        </label>
+        <textarea
+          value={postBody}
+          onChange={(e) => setPostBody(e.target.value)}
+          placeholder="Describe the activity, skill level, cost, meeting point, or anything important..."
+          rows={4}
+          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none resize-none"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Category
+          </label>
+          <select
+            value={postCategory}
+            onChange={(e) => setPostCategory(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
+          >
+            {Object.entries(CATEGORY_ICONS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Open Slots
+          </label>
+          <input
+            type="number"
+            value={postSlots}
+            onChange={(e) => setPostSlots(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+            min={1}
+            max={20}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Location
+        </label>
+        <input
+          type="text"
+          value={postLocation}
+          onChange={(e) => setPostLocation(e.target.value)}
+          placeholder="Example: DLF Club, Gurugram"
+          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Date
+          </label>
+          <input
+            type="date"
+            value={postDate}
+            onChange={(e) => setPostDate(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Time
+          </label>
+          <input
+            type="time"
+            value={postTime}
+            onChange={(e) => setPostTime(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-600 focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+        <div className="flex gap-3 flex-wrap items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-800">Need help writing?</h3>
+            <p className="text-sm text-gray-500">Generate quick ideas based on your selected category.</p>
+          </div>
+
+          <button
+            onClick={getAISuggestions}
+            disabled={aiLoading}
+            className="px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {aiLoading ? "Generating..." : "AI Ideas"}
+          </button>
+        </div>
+
+        {aiLoading && (
+          <div className="flex items-center gap-2 text-gray-500 mt-3">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin" />
+            <span>Getting suggestions...</span>
           </div>
         )}
+
+        {aiSuggestions.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {aiSuggestions.map((suggestion, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setPostTitle(suggestion.split(".")[0] || "New Plan")
+                  setPostBody(suggestion)
+                  setAiSuggestions([])
+                }}
+                className="w-full p-3 bg-white rounded-lg text-left text-sm text-gray-700 hover:ring-2 hover:ring-emerald-600 transition-shadow"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={createPost}
+        disabled={
+          !postTitle.trim() ||
+          !postBody.trim() ||
+          !postLocation.trim() ||
+          !postDate ||
+          !postTime
+        }
+        className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        Post Plan
+      </button>
+    </div>
+  </div>
+)}
 
         {/* Profile View */}
         {currentView === "profile" && currentUser && (
